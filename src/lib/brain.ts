@@ -256,8 +256,8 @@ export function interpret(rawInput: string, ctx: BrainContext): BrainReply {
     return { speech: 'I was assembled as a browser-native assistant. No arc reactor required, though the aesthetic is non-negotiable.' };
   }
   if (
-    /(iron man|tony stark|stark industries|avengers)/.test(t) &&
-    !/\b(open|show|display|hide|remove|view|suit|armou?r|3d|model|deploy)\b/.test(t)
+    /(iron ?man|tony stark|stark industries|avengers)/.test(t) &&
+    !/\b(open|show|display|hide|remove|view|suit|suits|armou?rs?|3d|model|deploy|assemble|assembly|summon|gather|rally|squad|formation)\b/.test(t)
   ) {
     return { speech: pick([
       'Mr. Stark is not on the network. You will have to settle for me.',
@@ -406,10 +406,17 @@ export function interpret(rawInput: string, ctx: BrainContext): BrainReply {
   }
 
   /* ---------------------------------------------------- armour formation */
+  // Spoken and typed variants all have to land here: “ironmans assemble”,
+  // “iron man’s assemble”, “iron men assemble”, “assemble”, “assemble the suits”.
   const squadWord = /\b(suits|armou?rs|squad|formation|backups?|reinforcements?|army|troopers?|iron men)\b/.test(t);
-  if (squadWord) {
+  const assembleWord = /\b(assemble|assembly|summon|rally)\b/.test(t);
+  // A singular “suit/armour/mark” mention means the single Mark VII below.
+  const singleSuit = /\b(the\s+)?(suit|armou?r|mark\s?(3|7|42|85))\b/.test(t);
+  if (!singleSuit && (squadWord || assembleWord)) {
     const dismiss = /\b(dismiss|disperse|dismissed|send (them )?(away|back)|hide|remove|recall|power down|stand down|retreat|clear|disengage)\b/.test(t);
-    const assemble = /\b(assemble|summon|deploy|gather|stand|bring|call|rally|form|activate|show|more|raise|spawn|build)\b/.test(t);
+    const assemble =
+      assembleWord ||
+      /\b(deploy|gather|stand|bring|call|form|activate|show|more|raise|spawn|build)\b/.test(t);
     if (dismiss && !assemble) {
       return { speech: `Auxiliary units dismissed${sign}. The Mark VII stands alone again.`, effect: { type: 'squad', count: 0 } };
     }
